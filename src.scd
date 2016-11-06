@@ -32,6 +32,43 @@ grid mean pitch information or period?
 
 // Run this section to see examples
 (
+// A collection of periodic 2D cellular automata indexed by their period
+var innerGrids = (
+    1: [ // Block
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    2: [ // Blinker
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    3: [ // Caterer
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,0,0,0,0,0,0],
+        [0,0,1,0,0,0,1,1,1,1,0],
+        [0,0,1,0,0,0,1,0,0,0,0],
+        [0,0,1,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,1,0,0,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ]
+);
+
 // Creates the outer grid given the number of rows, columns, rule set,
 // and the initial row
 var makeOuter = {|nrows, ncols, rules, init|
@@ -91,6 +128,78 @@ var stepInner = {|oldGrid, nsteps = 1|
 
     // Return the new grid
     grid;
+};
+
+// Decides how long to wait before moving to a new outer cell
+var getDelay = {
+    rrand(1, 3);
+};
+
+// Handles interpreting and playing the inner grid
+var playInner = {|grid|
+    grid.do {|row, rIdx|
+        row.do {|value, cIdx|
+            if (value == 1,
+                { ([rIdx, cIdx].asString + "is on").postln; }
+            );
+        };
+    };
+};
+
+var playSong = {
+    var curX, curY;
+    var outGrid, outRows, outCols, outRules, outInit;
+    var play;
+
+    // Initialize the outer grid
+    outRows = 40;
+    outCols = 40;
+    outRules = sampleRule;
+    outInit = Array.fill(~ncols, { rrand(1, 3); });
+    outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
+
+    // Initialize the coordinates
+    curX = outCols.rand;
+    curY = outRows.rand;
+
+    // The main loop
+    play = Routine({
+        var period, inGrid, delay;
+
+        inf.do {|step|
+            ("Step" + step + "at" + [curY, curX].asString).postln;
+            // Look at the current cell
+            period = outGrid[curY][curX];
+
+            if (period == 0,
+                { /* Do whatever should happen here */ },
+                {
+                    // Get the inner grid and go the appropriate number of steps
+                    // Currently assumes each inner cell does one step every time
+                    // the outer position moves
+                    inGrid = innerGrids[period];
+                    inGrid = stepInner.value(inGrid, step % period);
+
+                    // Handle the inner grid
+                    playInner.value(inGrid);
+                }
+            );
+
+            // Move the position
+            // This could (should?) be based on the current position in the grid
+            // Currently loops to the other side if an edge is reached
+            // Could also not move, retry randomly, jump to a random place, etc
+            curX = (curX + [-1, 0, 1].choose) % outCols;
+            curY = (curY + [-1, 0, 1].choose) % outRows;
+
+            // Wait to move to the next outer cell
+            delay = getDelay.value();
+            delay.wait;
+        };
+    });
+
+    // Start the song
+    play.play;
 };
 
 // Conway's Game of Life rules (used for the inner grids)
@@ -160,20 +269,16 @@ var sampleRule = {|in|
 "".postln;
 
 // Example of a few steps of an oscillating inner cell
-~grid = [
-    [0,0,0,0,0,0],
-    [0,0,0,0,0,0],
-    [0,0,1,1,1,0],
-    [0,1,1,1,0,0],
-    [0,0,0,0,0,0],
-    [0,0,0,0,0,0]
-];
-"Initial".postln;
+~period = rrand(1,3);
+~grid = innerGrids[~period];
+("Initial with period" + ~period).postln;
 ~grid.do {|row| row.join.postln; };
 
-4.do {|i|
+~period.do {|i|
     ("Step" + (i + 1)).postln;
     ~grid = stepInner.value(~grid);
     ~grid.do {|row| row.join.postln; };
 };
+
+playSong.value();
 );
