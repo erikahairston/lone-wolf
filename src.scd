@@ -1,14 +1,5 @@
 /* Lone Wolf Team */
 
-//something that takes the size and rules as arguments
-//initialize array of initial conditions
-
-//generate outer
-
-//generate inner  (2D)
-
-//main loop walks through outer automater, gets the inner cell and passes that to another fxn that decides what do do with it
-
 /*
 Things to decide:
 - Do we want to have a fixed set of the inner oscillators? So for example we could
@@ -30,7 +21,6 @@ grid mean pitch information or period?
 -- If no new cell is reached, keep playing last one (ones?) or allow silence
 */
 
-// Run this section to see examples
 (
 // A collection of periodic 2D cellular automata indexed by their period
 var innerGrids = (
@@ -81,12 +71,14 @@ var makeOuter = {|nrows, ncols, rules, init|
     grid[0] = init;
 
     (1 .. nrows - 1).do {|rowIdx| // For each row (skipping the first)...
-        (1 .. ncols - 2).do {|colIdx| // For each column (ignoring the edges)...
-            // Maybe we want to do cyclic borders instead of ignoring the edges?
-            // Or just treat the values off the edge as 0 or some other default?
-
+        (0 .. ncols - 1).do {|colIdx| // For each column
             // Get the list of neighbors (right now just the on the row above)
-            var neighbors = grid[rowIdx - 1][colIdx - 1 .. colIdx + 1];
+            var neighbors = [
+                grid[rowIdx - 1].wrapAt(colIdx - 1),
+                grid[rowIdx - 1].wrapAt(colIdx),
+                grid[rowIdx - 1].wrapAt(colIdx + 1),
+
+            ];
 
             // Apply the rules to get the new value
             grid[rowIdx][colIdx] = rules.value(neighbors);
@@ -131,12 +123,26 @@ var stepInner = {|oldGrid, nsteps = 1|
 };
 
 // Decides how long to wait before moving to a new outer cell
-var getDelay = {
-    rrand(1, 3);
+var getDelay = {|oldDelay|
+    var delay, delayTbl, allDelays;
+
+    // All of the possible delays
+    allDelays = [1, 1/2, 1/4, 1/8];
+
+    // Maps delays to probability arrays
+    delayTbl = (
+        1: [4, 2, 2, 1],
+        1/2: [2, 4, 3, 2],
+        1/4: [1, 2, 4, 3],
+        1/8: [1, 2, 2, 4]
+    );
+
+    delay = allDelays.wchoose(delayTbl[oldDelay].normalizeSum);
 };
 
 // Handles interpreting and playing the inner grid
-var playInner = {|grid|
+var playInner = {|grid, pitch|
+    ("Pitch is" + pitch).postln;
     grid.do {|row, rIdx|
         row.do {|value, cIdx|
             if (value == 1,
@@ -144,6 +150,8 @@ var playInner = {|grid|
             );
         };
     };
+
+    Pbind(\ctranspose, pitch);
 };
 
 var playSong = {
@@ -154,8 +162,8 @@ var playSong = {
     // Initialize the outer grid
     outRows = 40;
     outCols = 40;
-    outRules = sampleRule;
-    outInit = Array.fill(~ncols, { rrand(1, 3); });
+    outRules = periodPitchRule;
+    outInit = Array.fill(outCols, { [innerGrids.keys.choose, 12.rand]; });
     outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
 
     // Initialize the coordinates
@@ -164,12 +172,18 @@ var playSong = {
 
     // The main loop
     play = Routine({
-        var period, inGrid, delay;
+        var period, pitch, inGrid, delay, maxPlaying, playingIdx, playing, pattern;
+
+        delay = 1/4;
+
+        maxPlaying = 3;
+        playingIdx = 0;
+        playing = Array.fill(maxPlaying, { Pbind(\degree, \rest); });
 
         inf.do {|step|
             ("Step" + step + "at" + [curY, curX].asString).postln;
             // Look at the current cell
-            period = outGrid[curY][curX];
+            # period, pitch = outGrid[curY][curX];
 
             if (period == 0,
                 { /* Do whatever should happen here */ },
@@ -181,7 +195,12 @@ var playSong = {
                     inGrid = stepInner.value(inGrid, step % period);
 
                     // Handle the inner grid
-                    playInner.value(inGrid);
+                    pattern = playInner.value(inGrid, pitch);
+
+                    // Replace the old pattern
+                    playing[playingIdx].stop;
+                    playing[playingIdx] = pattern.play;
+                    playingIdx = (playingIdx + 1) % maxPlaying;
                 }
             );
 
@@ -193,13 +212,27 @@ var playSong = {
             curY = (curY + [-1, 0, 1].choose) % outRows;
 
             // Wait to move to the next outer cell
-            delay = getDelay.value();
+            delay = getDelay.value(delay);
             delay.wait;
         };
     });
 
     // Start the song
     play.play;
+};
+
+// A rule to generate the outer grid
+var periodPitchRule = {|in|
+    var inPeriods, inPitchs;
+    var outPeriod, outPitch;
+
+    # inPeriods, inPitchs = in.flop;
+
+    outPeriod = [innerGrids.keys.asList, 0].flat.choose;
+
+    outPitch = (inPitchs[1] + 7) % 12;
+
+    [outPeriod, outPitch];
 };
 
 // Conway's Game of Life rules (used for the inner grids)
@@ -218,67 +251,71 @@ var gameOfLife = {|in, curVal|
     out;
 };
 
-// Wolfram's rule 30 (included just as an example)
-var rule30 = {|in|
-    var out;
+/*** Examples ***/
+var examples = {
+    // Wolfram's rule 30 (included just as an example)
+    var rule30 = {|in|
+        var out;
 
-    out = case
-    {in == [1, 1, 1]} {0}
-    {in == [1, 1, 0]} {0}
-    {in == [1, 0, 1]} {0}
-    {in == [1, 0, 0]} {1}
-    {in == [0, 1, 1]} {1}
-    {in == [0, 1, 0]} {1}
-    {in == [0, 0, 1]} {1}
-    {in == [0, 0, 0]} {0};
+        out = case
+        {in == [1, 1, 1]} {0}
+        {in == [1, 1, 0]} {0}
+        {in == [1, 0, 1]} {0}
+        {in == [1, 0, 0]} {1}
+        {in == [0, 1, 1]} {1}
+        {in == [0, 1, 0]} {1}
+        {in == [0, 0, 1]} {1}
+        {in == [0, 0, 0]} {0};
 
-    out;
-};
+        out;
+    };
 
-// A simple non-binary rule (included just as an example)
-var sampleRule = {|in|
-    var out;
+    // A simple non-binary rule (included just as an example)
+    var sampleRule = {|in|
+        var out;
 
-    out = if (in.sum.even,
-        { 2; },
-        { (in.first + in.last) % 4; }
-    );
+        out = if (in.sum.even,
+            { 2; },
+            { (in.first + in.last) % 4; }
+        );
 
-    out;
-};
+        out;
+    };
 
-// Example using rule 30
-~ncols = 50;
-~nrows = 20;
-~init = Array.fill(~ncols, 0);
-~init[~ncols / 2] = 1;
-~grid = makeOuter.value(~nrows, ~ncols, rule30, ~init);
-~grid.do {|row|
-    row.join.postln;
-};
+    // Example using rule 30
+    ~ncols = 50;
+    ~nrows = 20;
+    ~init = Array.fill(~ncols, 0);
+    ~init[~ncols / 2] = 1;
+    ~grid = makeOuter.value(~nrows, ~ncols, rule30, ~init);
+    ~grid.do {|row|
+        row.join.postln;
+    };
 
-"".postln;
+    "".postln;
 
-// Example using a rule with value from 0-3
-~ncols = 50;
-~nrows = 20;
-~init = Array.fill(~ncols, { 4.rand; });
-~grid = makeOuter.value(~nrows, ~ncols, sampleRule, ~init);
-~grid.do {|row| row.join.postln; };
-
-"".postln;
-
-// Example of a few steps of an oscillating inner cell
-~period = rrand(1,3);
-~grid = innerGrids[~period];
-("Initial with period" + ~period).postln;
-~grid.do {|row| row.join.postln; };
-
-~period.do {|i|
-    ("Step" + (i + 1)).postln;
-    ~grid = stepInner.value(~grid);
+    // Example using a rule with value from 0-3
+    ~ncols = 50;
+    ~nrows = 20;
+    ~init = Array.fill(~ncols, { 4.rand; });
+    ~grid = makeOuter.value(~nrows, ~ncols, sampleRule, ~init);
     ~grid.do {|row| row.join.postln; };
+
+    "".postln;
+
+    // Example of a few steps of an oscillating inner cell
+    ~period = rrand(1,3);
+    ~grid = innerGrids[~period];
+    ("Initial with period" + ~period).postln;
+    ~grid.do {|row| row.join.postln; };
+
+    ~period.do {|i|
+        ("Step" + (i + 1)).postln;
+        ~grid = stepInner.value(~grid);
+        ~grid.do {|row| row.join.postln; };
+    };
 };
 
+//examples.value();
 playSong.value();
 );
