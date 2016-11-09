@@ -24,38 +24,44 @@ grid mean pitch information or period?
 (
 // A collection of periodic 2D cellular automata indexed by their period
 var innerGrids = (
-    1: [ // Block
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,1,1,0,0,0,0,0],
-        [0,0,0,0,1,1,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0]
+    1: [
+        [ // Block
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,1,1,0,0,0,0,0],
+            [0,0,0,0,1,1,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0]
+        ]
     ],
-    2: [ // Blinker
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,1,1,1,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0]
+    2: [
+        [ // Blinker
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,1,1,1,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0]
+        ]
     ],
-    3: [ // Caterer
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,1,0,0,0,0,0,0],
-        [0,0,1,0,0,0,1,1,1,1,0],
-        [0,0,1,0,0,0,1,0,0,0,0],
-        [0,0,1,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,1,0,0,0,0,0],
-        [0,0,0,1,1,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0]
+    3: [
+        [ // Caterer
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,1,0,0,0,0,0,0],
+            [0,0,1,0,0,0,1,1,1,1,0],
+            [0,0,1,0,0,0,1,0,0,0,0],
+            [0,0,1,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,1,0,0,0,0,0],
+            [0,0,0,1,1,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0]
+        ]
     ]
 );
 
@@ -141,8 +147,7 @@ var getDelay = {|oldDelay|
 };
 
 // Handles interpreting and playing the inner grid
-var playInner = {|grid, pitch|
-    ("Pitch is" + pitch).postln;
+var playInner = {|grid|
     grid.do {|row, rIdx|
         row.do {|value, cIdx|
             if (value == 1,
@@ -151,21 +156,32 @@ var playInner = {|grid, pitch|
         };
     };
 
-    Pbind(\ctranspose, pitch);
+    // Just a placeholder
+    Pbind(\ctranspose, grid.flat.sum);
 };
 
 var playSong = {
     var curX, curY;
     var outGrid, outRows, outCols, outRules, outInit;
-    var outDisplay, inDisplay, gridSize;
+    var inRows, inCols, maxPlaying;
+    var outDisplay, inDisplays, gridSize;
     var play;
 
     // Initialize the outer grid
     outRows = 40;
     outCols = 40;
-    outRules = periodPitchRule;
-    outInit = Array.fill(outCols, { [innerGrids.keys.choose, 12.rand]; });
+    outRules = innerChoiceRule;
+    outInit = Array.fill(outCols, {
+        var period, idx;
+        period = innerGrids.keys.choose;
+        idx = innerGrids[period].size.rand;
+        [period, idx];
+    });
     outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
+
+    inRows = 9;
+    inCols = 11;
+    maxPlaying = 3;
 
     // Initialize the coordinates
     curX = outCols.rand;
@@ -199,60 +215,100 @@ var playSong = {
         };
     };
 
-    inDisplay = Window("Inner Grid", Rect(100, 100, 11 * gridSize, 9 * gridSize), false).front;
-    inDisplay.view.background = Color.white;
+    inDisplays = Array.fill(maxPlaying, nil);
+    maxPlaying.do {|i|
+        inDisplays[i] = Window(
+            "Inner Grid" + (i + 1),
+            Rect(100, (i + 1) * (inRows * gridSize + 50), inCols * gridSize, inRows * gridSize),
+            false
+        ).front;
+        inDisplays[i].view.background = Color.white;
 
-    inDisplay.drawFunc = {
-        var rect;
+        inDisplays[i].drawFunc = {|display|
+            var rect;
 
-        Pen.color = Color.black;
+            Pen.color = Color.black;
 
-        9.do {|row|
-            11.do {|col|
-                rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
-                Pen.addRect(rect);
+            inRows.do {|row|
+                inCols.do {|col|
+                    rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
+                    Pen.addRect(rect);
 
-                if (inDisplay.inGrid[row][col] == 0,
-                    { Pen.perform(\stroke); },
-                    { Pen.perform(\fill); }
-                );
+                    if (display.inGrid[row][col] == 0,
+                        { Pen.perform(\stroke); },
+                        { Pen.perform(\fill); }
+                    );
+                };
             };
         };
     };
 
     // The main loop
     play = Routine({
-        var period, pitch, inGrid, delay, maxPlaying, playingIdx, playing, pattern;
+        var playingIdx, playing;
+        var newPeriod, newIdx, delay;
 
         delay = 1/4;
 
-        maxPlaying = 3;
+        // The playing array keeps track of the last maxPlaying inner grids
+        // It stores the period and index of the grid, plus the event stream
+        // so it can stop old values from playing
         playingIdx = 0;
-        playing = Array.fill(maxPlaying, { Pbind(\degree, \rest); });
+        playing = Array.fill(maxPlaying, { [0, 0, Pbind(\degree, \rest).play]; });
 
         inf.do {|step|
             ("Step" + step + "at" + [curY, curX].asString).postln;
             // Look at the current cell
-            # period, pitch = outGrid[curY][curX];
+            # newPeriod, newIdx = outGrid[curY][curX];
 
-            if (period == 0,
+            if (newPeriod == 0,
                 { /* Do whatever should happen here */ },
                 {
-                    // Get the inner grid and go the appropriate number of steps
-                    // Currently assumes each inner cell does one step every time
-                    // the outer position moves
-                    inGrid = innerGrids[period];
-                    inGrid = stepInner.value(inGrid, step % period);
-
-                    // Handle the inner grid
-                    pattern = playInner.value(inGrid, pitch);
-
-                    // Replace the old pattern
-                    playing[playingIdx].stop;
-                    playing[playingIdx] = pattern.play;
+                    // Replace the old inner grid
+                    playing[playingIdx][0] = newPeriod;
+                    playing[playingIdx][1] = newIdx;
                     playingIdx = (playingIdx + 1) % maxPlaying;
                 }
             );
+
+            // Update the playing inner grids
+            maxPlaying.do {|i|
+                var period, idx, pattern, inGrid;
+
+                # period, idx = playing[i];
+
+                if (period != 0,
+                    {
+                        // Get the inner grid and go the appropriate number of steps
+                        // Assumes each inner cell does one step every time
+                        // the outer position moves
+                        inGrid = innerGrids[period][idx];
+                        inGrid = stepInner.value(inGrid, step % period);
+
+                        // Handle the inner grid
+                        pattern = playInner.value(inGrid);
+
+                        // Stop the old pattern and start the new one
+                        playing[i][2].stop;
+                        playing[i][2] = pattern.play;
+                    },
+                    {
+                        // Display an empty inner grid if period is 0
+                        inGrid = Array.fill2D(inRows, inCols, 0);
+                    }
+                );
+
+                // Update the inner display
+
+                // addUniqueMethod is sort of a hack to pass some information (the inner
+                // grid) to the draw method
+                // defer is needed because TempoClock can't schedule GUI events, needs to
+                // be AppClock
+                {
+                    inDisplays[i].addUniqueMethod(\inGrid, { inGrid; });
+                    inDisplays[i].refresh;
+                }.defer;
+            };
 
             // Move the position
             // This could (should?) be based on the current position in the grid
@@ -261,16 +317,7 @@ var playSong = {
             curX = (curX + (-1 .. 1).choose) % outCols;
             curY = (curY + (-1 .. 1).choose) % outRows;
 
-            // Update the displays
-
-            // Display an empty inner grid if period is 0
-            if (period == 0, { inGrid = Array.fill2D(9, 11, 0); });
-
-            // addUniqueMethod is sort of a hack to pass some information (the inner
-            // grid) to the draw method
-            // defer is needed because TempoClock can't schedule GUI events, needs to
-            // be AppClock
-            { inDisplay.addUniqueMethod(\inGrid, { inGrid; }); inDisplay.refresh; }.defer;
+            // Update the outer display
             { outDisplay.refresh; }.defer;
 
             // Wait to move to the next outer cell
@@ -284,17 +331,20 @@ var playSong = {
 };
 
 // A rule to generate the outer grid
-var periodPitchRule = {|in|
-    var inPeriods, inPitchs;
-    var outPeriod, outPitch;
+var innerChoiceRule = {|in|
+    var inPeriods, inIdxs;
+    var outPeriod, outIdx;
 
-    # inPeriods, inPitchs = in.flop;
+    # inPeriods, inIdxs = in.flop;
 
     outPeriod = [innerGrids.keys.asList, 0].flat.choose;
 
-    outPitch = (inPitchs[1] + 7) % 12;
+    outIdx = if (outPeriod != 0,
+        { innerGrids[outPeriod].size.rand; },
+        { 0; }
+    );
 
-    [outPeriod, outPitch];
+    [outPeriod, outIdx];
 };
 
 // Conway's Game of Life rules (used for the inner grids)
