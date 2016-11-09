@@ -24,342 +24,358 @@ grid mean pitch information or period?
 (
 // A collection of periodic 2D cellular automata indexed by their period
 var innerGrids = (
-	1: [ // Block
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,1,1,0,0,0,0,0],
-		[0,0,0,0,1,1,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0]
-	],
-	2: [ // Blinker
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,1,1,1,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0]
-	],
-	3: [ // Caterer
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,1,0,0,0,0,0,0],
-		[0,0,1,0,0,0,1,1,1,1,0],
-		[0,0,1,0,0,0,1,0,0,0,0],
-		[0,0,1,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,1,0,0,0,0,0],
-		[0,0,0,1,1,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0],
-		[0,0,0,0,0,0,0,0,0,0,0]
-	]
+    1: [ // Block
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    2: [ // Blinker
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,1,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ],
+    3: [ // Caterer
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,0,0,0,0,0,0],
+        [0,0,1,0,0,0,1,1,1,1,0],
+        [0,0,1,0,0,0,1,0,0,0,0],
+        [0,0,1,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,1,0,0,0,0,0],
+        [0,0,0,1,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0]
+    ]
 );
 
 // Creates the outer grid given the number of rows, columns, rule set,
 // and the initial row
 var makeOuter = {|nrows, ncols, rules, init|
-	var grid;
+    var grid;
 
-	// Create an array of 0s
-	grid = Array.fill2D(nrows, ncols, 0);
+    // Create an array of 0s
+    grid = Array.fill2D(nrows, ncols, 0);
 
-	// Set the first row
-	grid[0] = init;
+    // Set the first row
+    grid[0] = init;
 
-	(1 .. nrows - 1).do {|rowIdx| // For each row (skipping the first)...
-		(0 .. ncols - 1).do {|colIdx| // For each column
-			// Get the list of neighbors (right now just the on the row above)
-			var neighbors = [
-				grid[rowIdx - 1].wrapAt(colIdx - 1),
-				grid[rowIdx - 1].wrapAt(colIdx),
-				grid[rowIdx - 1].wrapAt(colIdx + 1),
+    (1 .. nrows - 1).do {|rowIdx| // For each row (skipping the first)...
+        (0 .. ncols - 1).do {|colIdx| // For each column
+            // Get the list of neighbors (right now just the on the row above)
+            var neighbors = [
+                grid[rowIdx - 1].wrapAt(colIdx - 1),
+                grid[rowIdx - 1].wrapAt(colIdx),
+                grid[rowIdx - 1].wrapAt(colIdx + 1),
 
-			];
+            ];
 
-			// Apply the rules to get the new value
-			grid[rowIdx][colIdx] = rules.value(neighbors);
-		};
-	};
+            // Apply the rules to get the new value
+            grid[rowIdx][colIdx] = rules.value(neighbors);
+        };
+    };
 
-	// Return the grid
-	grid;
+    // Return the grid
+    grid;
 };
 
 // Applies the Game of Life rules nsteps times to the given grid
 var stepInner = {|oldGrid, nsteps = 1|
-	var grid, tempGrid;
+    var grid, tempGrid;
 
-	// Copy the old grid so we don't change it
-	grid = oldGrid.deepCopy;
+    // Copy the old grid so we don't change it
+    grid = oldGrid.deepCopy;
 
-	// Create a temporary grid to apply changes to until all cells are updated
-	tempGrid = grid.deepCopy;
+    // Create a temporary grid to apply changes to until all cells are updated
+    tempGrid = grid.deepCopy;
 
-	nsteps.do { // Apply the rules nsteps times
-		(1 .. grid.size - 2).do {|rowIdx| // For each row (ignoring the edges)...
-			(1 .. grid[rowIdx].size - 2).do {|colIdx| // For each column (ignoring the edges)...
-				// Get the list of neighbors (all 8 surrounding cells)
-				var neighbors = [
-					grid[rowIdx - 1][colIdx - 1 .. colIdx + 1],
-					grid[rowIdx][colIdx - 1], grid[rowIdx][colIdx + 1],
-					grid[rowIdx + 1][colIdx - 1 .. colIdx + 1]
-				].flat;
+    nsteps.do { // Apply the rules nsteps times
+        (1 .. grid.size - 2).do {|rowIdx| // For each row (ignoring the edges)...
+            (1 .. grid[rowIdx].size - 2).do {|colIdx| // For each column (ignoring the edges)...
+                // Get the list of neighbors (all 8 surrounding cells)
+                var neighbors = [
+                    grid[rowIdx - 1][colIdx - 1 .. colIdx + 1],
+                    grid[rowIdx][colIdx - 1], grid[rowIdx][colIdx + 1],
+                    grid[rowIdx + 1][colIdx - 1 .. colIdx + 1]
+                ].flat;
 
-				// Apply the rules to get the new value in the temp grid
-				tempGrid[rowIdx][colIdx] = gameOfLife.value(neighbors, grid[rowIdx][colIdx]);
-			};
-		};
+                // Apply the rules to get the new value in the temp grid
+                tempGrid[rowIdx][colIdx] = gameOfLife.value(neighbors, grid[rowIdx][colIdx]);
+            };
+        };
 
-		// Copy changes from temp grid now that all cells are updated
-		grid = tempGrid.deepCopy;
-	};
+        // Copy changes from temp grid now that all cells are updated
+        grid = tempGrid.deepCopy;
+    };
 
-	// Return the new grid
-	grid;
+    // Return the new grid
+    grid;
 };
 
 // Decides how long to wait before moving to a new outer cell
 var getDelay = {|oldDelay|
-	var delay, delayTbl, allDelays;
+    var delay, delayTbl, allDelays;
 
-	// All of the possible delays
-	allDelays = [1, 1/2, 1/4, 1/8];
+    // All of the possible delays
+    allDelays = [1, 1/2, 1/4, 1/8];
 
-	// Maps delays to probability arrays
-	delayTbl = (
-		1: [4, 2, 2, 1],
-		1/2: [2, 4, 3, 2],
-		1/4: [1, 2, 4, 3],
-		1/8: [1, 2, 2, 4]
-	);
+    // Maps delays to probability arrays
+    delayTbl = (
+        1: [4, 2, 2, 1],
+        1/2: [2, 4, 3, 2],
+        1/4: [1, 2, 4, 3],
+        1/8: [1, 2, 2, 4]
+    );
 
-	delay = allDelays.wchoose(delayTbl[oldDelay].normalizeSum);
+    delay = allDelays.wchoose(delayTbl[oldDelay].normalizeSum);
 };
 
 // Handles interpreting and playing the inner grid
 var playInner = {|grid, pitch|
-	("Pitch is" + pitch).postln;
-	grid.do {|row, rIdx|
-		row.do {|value, cIdx|
-			if (value == 1,
-				{ ([rIdx, cIdx].asString + "is on").postln; }
-			);
-		};
-	};
+    ("Pitch is" + pitch).postln;
+    grid.do {|row, rIdx|
+        row.do {|value, cIdx|
+            if (value == 1,
+                { ([rIdx, cIdx].asString + "is on").postln; }
+            );
+        };
+    };
 
-	Pbind(\ctranspose, pitch);
+    Pbind(\ctranspose, pitch);
 };
 
 var playSong = {
-	var curX, curY;
-	var outGrid, outRows, outCols, outRules, outInit;
-	var outDisplay, inDisplay, gridSize;
-	var play;
+    var curX, curY;
+    var outGrid, outRows, outCols, outRules, outInit;
+    var outDisplay, inDisplay, gridSize;
+    var play;
 
-	// Initialize the outer grid
-	outRows = 40;
-	outCols = 40;
-	outRules = periodPitchRule;
-	outInit = Array.fill(outCols, { [innerGrids.keys.choose, 12.rand]; });
-	outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
+    // Initialize the outer grid
+    outRows = 40;
+    outCols = 40;
+    outRules = periodPitchRule;
+    outInit = Array.fill(outCols, { [innerGrids.keys.choose, 12.rand]; });
+    outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
 
-	// Initialize the coordinates
-	curX = outCols.rand;
-	curY = outRows.rand;
+    // Initialize the coordinates
+    curX = outCols.rand;
+    curY = outRows.rand;
 
-	// Initialize the displays
-	gridSize = 15;
-	outDisplay = Window("Outer Grid", Rect(0, 0, outCols * gridSize, outRows * gridSize), false).front;
-	outDisplay.view.background = Color.white;
+    // Initialize the displays
+    gridSize = 15;
+    outDisplay = Window(
+        "Outer Grid", Rect(300, 100, outCols * gridSize, outRows * gridSize), false
+    ).front;
+    outDisplay.view.background = Color.white;
 
-	outDisplay.drawFunc = {
-		var rect;
+    outDisplay.drawFunc = {
+        var rect;
 
-		outRows.do {|row|
-			outCols.do {|col|
-				Pen.color = if ([curX, curY] == [col, row],
-					{ Color.red; },
-					{ Color.black; }
-				);
+        outRows.do {|row|
+            outCols.do {|col|
+                Pen.color = if ([curX, curY] == [col, row],
+                    { Color.red; },
+                    { Color.black; }
+                );
 
-				rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
-				Pen.addRect(rect);
+                rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
+                Pen.addRect(rect);
 
-				if (outGrid[row][col][0] == 0, { Pen.perform(\stroke) }, { Pen.perform(\fill) });
-			};
-		};
-	};
+                if (outGrid[row][col][0] == 0,
+                    { Pen.perform(\stroke); },
+                    { Pen.perform(\fill); }
+                );
+            };
+        };
+    };
 
-	inDisplay = Window("Inner Grid", Rect(0, 0, 11 * gridSize, 9 * gridSize), false).front;
-	inDisplay.view.background = Color.white;
+    inDisplay = Window("Inner Grid", Rect(100, 100, 11 * gridSize, 9 * gridSize), false).front;
+    inDisplay.view.background = Color.white;
 
-	inDisplay.drawFunc = {
-		var rect;
+    inDisplay.drawFunc = {
+        var rect;
 
-		Pen.color = Color.black;
+        Pen.color = Color.black;
 
-		9.do {|row|
-			11.do {|col|
-				rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
-				Pen.addRect(rect);
+        9.do {|row|
+            11.do {|col|
+                rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
+                Pen.addRect(rect);
 
-				if (inDisplay.inGrid[row][col] == 0, { Pen.perform(\stroke) }, { Pen.perform(\fill) });
-			};
-		};
-	};
+                if (inDisplay.inGrid[row][col] == 0,
+                    { Pen.perform(\stroke); },
+                    { Pen.perform(\fill); }
+                );
+            };
+        };
+    };
 
-	// The main loop
-	play = Routine({
-		var period, pitch, inGrid, delay, maxPlaying, playingIdx, playing, pattern;
+    // The main loop
+    play = Routine({
+        var period, pitch, inGrid, delay, maxPlaying, playingIdx, playing, pattern;
 
-		delay = 1/4;
+        delay = 1/4;
 
-		maxPlaying = 3;
-		playingIdx = 0;
-		playing = Array.fill(maxPlaying, { Pbind(\degree, \rest); });
+        maxPlaying = 3;
+        playingIdx = 0;
+        playing = Array.fill(maxPlaying, { Pbind(\degree, \rest); });
 
-		inf.do {|step|
-			("Step" + step + "at" + [curY, curX].asString).postln;
-			// Look at the current cell
-			# period, pitch = outGrid[curY][curX];
+        inf.do {|step|
+            ("Step" + step + "at" + [curY, curX].asString).postln;
+            // Look at the current cell
+            # period, pitch = outGrid[curY][curX];
 
-			if (period == 0,
-				{ /* Do whatever should happen here */ },
-				{
-					// Get the inner grid and go the appropriate number of steps
-					// Currently assumes each inner cell does one step every time
-					// the outer position moves
-					inGrid = innerGrids[period];
-					inGrid = stepInner.value(inGrid, step % period);
+            if (period == 0,
+                { /* Do whatever should happen here */ },
+                {
+                    // Get the inner grid and go the appropriate number of steps
+                    // Currently assumes each inner cell does one step every time
+                    // the outer position moves
+                    inGrid = innerGrids[period];
+                    inGrid = stepInner.value(inGrid, step % period);
 
-					// Handle the inner grid
-					pattern = playInner.value(inGrid, pitch);
+                    // Handle the inner grid
+                    pattern = playInner.value(inGrid, pitch);
 
-					// Replace the old pattern
-					playing[playingIdx].stop;
-					playing[playingIdx] = pattern.play;
-					playingIdx = (playingIdx + 1) % maxPlaying;
-				}
-			);
+                    // Replace the old pattern
+                    playing[playingIdx].stop;
+                    playing[playingIdx] = pattern.play;
+                    playingIdx = (playingIdx + 1) % maxPlaying;
+                }
+            );
 
-			// Move the position
-			// This could (should?) be based on the current position in the grid
-			// Currently loops to the other side if an edge is reached
-			// Could also not move, retry randomly, jump to a random place, etc
-			curX = (curX + (-1 .. 1).choose) % outCols;
-			curY = (curY + (-1 .. 1).choose) % outRows;
+            // Move the position
+            // This could (should?) be based on the current position in the grid
+            // Currently loops to the other side if an edge is reached
+            // Could also not move, retry randomly, jump to a random place, etc
+            curX = (curX + (-1 .. 1).choose) % outCols;
+            curY = (curY + (-1 .. 1).choose) % outRows;
 
-			// Update the display
-			{if (period != 0, {inDisplay.addUniqueMethod(\inGrid, {inGrid}); inDisplay.refresh; }, {})}.defer;
-			{ outDisplay.refresh; }.defer;
+            // Update the displays
 
-			// Wait to move to the next outer cell
-			delay = getDelay.value(delay);
-			delay.wait;
-		};
-	});
+            // Display an empty inner grid if period is 0
+            if (period == 0, { inGrid = Array.fill2D(9, 11, 0); });
 
-	// Start the song
-	play.play;
+            // addUniqueMethod is sort of a hack to pass some information (the inner
+            // grid) to the draw method
+            // defer is needed because TempoClock can't schedule GUI events, needs to
+            // be AppClock
+            { inDisplay.addUniqueMethod(\inGrid, { inGrid; }); inDisplay.refresh; }.defer;
+            { outDisplay.refresh; }.defer;
+
+            // Wait to move to the next outer cell
+            delay = getDelay.value(delay);
+            delay.wait;
+        };
+    });
+
+    // Start the song
+    play.play;
 };
 
 // A rule to generate the outer grid
 var periodPitchRule = {|in|
-	var inPeriods, inPitchs;
-	var outPeriod, outPitch;
+    var inPeriods, inPitchs;
+    var outPeriod, outPitch;
 
-	# inPeriods, inPitchs = in.flop;
+    # inPeriods, inPitchs = in.flop;
 
-	outPeriod = [innerGrids.keys.asList, 0].flat.choose;
+    outPeriod = [innerGrids.keys.asList, 0].flat.choose;
 
-	outPitch = (inPitchs[1] + 7) % 12;
+    outPitch = (inPitchs[1] + 7) % 12;
 
-	[outPeriod, outPitch];
+    [outPeriod, outPitch];
 };
 
 // Conway's Game of Life rules (used for the inner grids)
 var gameOfLife = {|in, curVal|
-	var out;
+    var out;
 
-	out = if (curVal == 0,
-		{ // Dead
-			if (in.sum == 3, { 1; }, { 0; });
-		},
-		{ // Live
-			if (in.sum == 2 || (in.sum == 3), { 1; }, { 0; });
-		}
-	);
+    out = if (curVal == 0,
+        { // Dead
+            if (in.sum == 3, { 1; }, { 0; });
+        },
+        { // Live
+            if (in.sum == 2 || (in.sum == 3), { 1; }, { 0; });
+        }
+    );
 
-	out;
+    out;
 };
 
 /*** Examples ***/
 var examples = {
-	// Wolfram's rule 30 (included just as an example)
-	var rule30 = {|in|
-		var out;
+    // Wolfram's rule 30 (included just as an example)
+    var rule30 = {|in|
+        var out;
 
-		out = case
-		{in == [1, 1, 1]} {0}
-		{in == [1, 1, 0]} {0}
-		{in == [1, 0, 1]} {0}
-		{in == [1, 0, 0]} {1}
-		{in == [0, 1, 1]} {1}
-		{in == [0, 1, 0]} {1}
-		{in == [0, 0, 1]} {1}
-		{in == [0, 0, 0]} {0};
+        out = case
+        {in == [1, 1, 1]} {0}
+        {in == [1, 1, 0]} {0}
+        {in == [1, 0, 1]} {0}
+        {in == [1, 0, 0]} {1}
+        {in == [0, 1, 1]} {1}
+        {in == [0, 1, 0]} {1}
+        {in == [0, 0, 1]} {1}
+        {in == [0, 0, 0]} {0};
 
-		out;
-	};
+        out;
+    };
 
-	// A simple non-binary rule (included just as an example)
-	var sampleRule = {|in|
-		var out;
+    // A simple non-binary rule (included just as an example)
+    var sampleRule = {|in|
+        var out;
 
-		out = if (in.sum.even,
-			{ 2; },
-			{ (in.first + in.last) % 4; }
-		);
+        out = if (in.sum.even,
+            { 2; },
+            { (in.first + in.last) % 4; }
+        );
 
-		out;
-	};
+        out;
+    };
 
-	// Example using rule 30
-	~ncols = 50;
-	~nrows = 20;
-	~init = Array.fill(~ncols, 0);
-	~init[~ncols / 2] = 1;
-	~grid = makeOuter.value(~nrows, ~ncols, rule30, ~init);
-	~grid.do {|row|
-		row.join.postln;
-	};
+    // Example using rule 30
+    ~ncols = 50;
+    ~nrows = 20;
+    ~init = Array.fill(~ncols, 0);
+    ~init[~ncols / 2] = 1;
+    ~grid = makeOuter.value(~nrows, ~ncols, rule30, ~init);
+    ~grid.do {|row|
+        row.join.postln;
+    };
 
-	"".postln;
+    "".postln;
 
-	// Example using a rule with value from 0-3
-	~ncols = 50;
-	~nrows = 20;
-	~init = Array.fill(~ncols, { 4.rand; });
-	~grid = makeOuter.value(~nrows, ~ncols, sampleRule, ~init);
-	~grid.do {|row| row.join.postln; };
+    // Example using a rule with value from 0-3
+    ~ncols = 50;
+    ~nrows = 20;
+    ~init = Array.fill(~ncols, { 4.rand; });
+    ~grid = makeOuter.value(~nrows, ~ncols, sampleRule, ~init);
+    ~grid.do {|row| row.join.postln; };
 
-	"".postln;
+    "".postln;
 
-	// Example of a few steps of an oscillating inner cell
-	~period = rrand(1,3);
-	~grid = innerGrids[~period];
-	("Initial with period" + ~period).postln;
-	~grid.do {|row| row.join.postln; };
+    // Example of a few steps of an oscillating inner cell
+    ~period = rrand(1,3);
+    ~grid = innerGrids[~period];
+    ("Initial with period" + ~period).postln;
+    ~grid.do {|row| row.join.postln; };
 
-	~period.do {|i|
-		("Step" + (i + 1)).postln;
-		~grid = stepInner.value(~grid);
-		~grid.do {|row| row.join.postln; };
-	};
+    ~period.do {|i|
+        ("Step" + (i + 1)).postln;
+        ~grid = stepInner.value(~grid);
+        ~grid.do {|row| row.join.postln; };
+    };
 };
 
 //examples.value();
@@ -389,31 +405,31 @@ ex = 5;
 y = 7;
 
 w.drawFunc = {|a, b, c|
-	var rect;
-	[a, b, c].postln;
-	r.do {|row|
-		c.do {|col|
-			Pen.color = if ([ex, y] == [col, row],
-				{Color.red},
-				{Color.black}
-			);
-			rect = Rect(col * s, row * s, s, s);
-			Pen.addRect(rect);
+    var rect;
+    [a, b, c].postln;
+    r.do {|row|
+        c.do {|col|
+            Pen.color = if ([ex, y] == [col, row],
+                {Color.red},
+                {Color.black}
+            );
+            rect = Rect(col * s, row * s, s, s);
+            Pen.addRect(rect);
 
-			if (a[row][col] == 0, { Pen.perform(\stroke) }, { Pen.perform(\fill) });
-		};
-	};
+            if (a[row][col] == 0, { Pen.perform(\stroke) }, { Pen.perform(\fill) });
+        };
+    };
 };
 
 q = Routine {
-	loop {
-		ex = (ex + (-1 .. 1).choose) % c;
-		y = (y + (-1 .. 1).choose) % r;
-			[ex, y].postln;
+    loop {
+        ex = (ex + (-1 .. 1).choose) % c;
+        y = (y + (-1 .. 1).choose) % r;
+        [ex, y].postln;
 
-		{w.refresh(1)}.defer;
-		1.wait;
-	};
+        {w.refresh(1)}.defer;
+        1.wait;
+    };
 };
 //p.fork(AppClock);
 q.play;
