@@ -1,26 +1,6 @@
-/* Lone Wolf Team */
+/* Team Lone Wolf Project */
 
-/*
-Things to decide:
-- Do we want to have a fixed set of the inner oscillators? So for example we could
-just store them in an array organized by period, or is there some way of generating them?
-
-- What to do about edges? In the generation of the grids we can either ignore the edge values
-that don't have all 3 neighbors and leave them as 0, fill in the missing neighbors with some
-default value, or treat the grid cyclically and so the leftmost cell is neighbors with the
-rightmost cell.
-
-- How to interpret musically. Inner cells map to samples + index? Rows and columns in outer
-grid mean pitch information or period?
-
-- What to do when an inner cell is reached? Some options:
--- Stop moving in the outer grid, play until inner cell repeats
--- Keep moving in the outer grid, play the inner cell until a new one is reached and then
---- Stop the old one and play the new
---- Layer the new one with the old (up to some limit?)
--- If no new cell is reached, keep playing last one (ones?) or allow silence
-*/
-
+// Play this section
 (
 // A collection of periodic 2D cellular automata indexed by their period
 var innerGrids = (
@@ -65,7 +45,40 @@ var innerGrids = (
     ]
 );
 
-// Creates the outer grid given the number of rows, columns, rule set,
+// A rule to generate the outer grid
+var innerChoiceRule = {|in|
+    var inPeriods, inIdxs;
+    var outPeriod, outIdx;
+
+    # inPeriods, inIdxs = in.flop;
+
+    outPeriod = [innerGrids.keys.asList, 0].flat.choose;
+
+    outIdx = if (outPeriod != 0,
+        { innerGrids[outPeriod].size.rand; },
+        { 0; }
+    );
+
+    [outPeriod, outIdx];
+};
+
+// Conway's Game of Life rules (used for the inner grids)
+var gameOfLife = {|in, curVal|
+    var out;
+
+    out = if (curVal == 0,
+        { // Dead
+            if (in.sum == 3, { 1; }, { 0; });
+        },
+        { // Live
+            if (in.sum == 2 || (in.sum == 3), { 1; }, { 0; });
+        }
+    );
+
+    out;
+};
+
+// Create the outer grid given the number of rows, columns, rule set,
 // and the initial row
 var makeOuter = {|nrows, ncols, rules, init|
     var grid;
@@ -78,7 +91,7 @@ var makeOuter = {|nrows, ncols, rules, init|
 
     (1 .. nrows - 1).do {|rowIdx| // For each row (skipping the first)...
         (0 .. ncols - 1).do {|colIdx| // For each column
-            // Get the list of neighbors (right now just the on the row above)
+            // Get the list of neighbors
             var neighbors = [
                 grid[rowIdx - 1].wrapAt(colIdx - 1),
                 grid[rowIdx - 1].wrapAt(colIdx),
@@ -95,7 +108,7 @@ var makeOuter = {|nrows, ncols, rules, init|
     grid;
 };
 
-// Applies the Game of Life rules nsteps times to the given grid
+// Apply the Game of Life rules nsteps times to the given grid
 var stepInner = {|oldGrid, nsteps = 1|
     var grid, tempGrid;
 
@@ -128,14 +141,15 @@ var stepInner = {|oldGrid, nsteps = 1|
     grid;
 };
 
-// Decides how long to wait before moving to a new outer cell
+// Decide how long to wait before moving to a new outer cell
+// using a Markov chain
 var getDelay = {|oldDelay|
-    var delay, delayTbl, allDelays;
+    var delayTbl, allDelays;
 
     // All of the possible delays
     allDelays = [1, 1/2, 1/4, 1/8];
 
-    // Maps delays to probability arrays
+    // Map delays to probability arrays
     delayTbl = (
         1: [4, 2, 2, 1],
         1/2: [2, 4, 3, 2],
@@ -143,10 +157,11 @@ var getDelay = {|oldDelay|
         1/8: [1, 2, 2, 4]
     );
 
-    delay = allDelays.wchoose(delayTbl[oldDelay].normalizeSum);
+    // Choose a delay using the probabilities
+    allDelays.wchoose(delayTbl[oldDelay].normalizeSum);
 };
 
-// Handles interpreting and playing the inner grid
+// Handle interpreting and playing the inner grid
 var playInner = {|grid|
     var pattern;
 
@@ -171,6 +186,7 @@ var playInner = {|grid|
     // Ppar(pattern);
 };
 
+// Create the grids and walk around it in a loop
 var playSong = {
     var curX, curY;
     var outGrid, outRows, outCols, outRules, outInit;
@@ -198,7 +214,7 @@ var playSong = {
     curX = outCols.rand;
     curY = outRows.rand;
 
-    // Initialize the displays
+    // Initialize the outer display
     gridSize = 15;
     outDisplay = Window(
         "Outer Grid", Rect(300, 100, outCols * gridSize, outRows * gridSize), false
@@ -228,6 +244,7 @@ var playSong = {
         };
     };
 
+    // Initialize the inner displays
     // One display for each currently playing inner grid
     inDisplays = Array.fill(maxPlaying, nil);
     maxPlaying.do {|i|
@@ -276,9 +293,11 @@ var playSong = {
 
         inf.do {|step|
             ("Step" + step + "at" + [curY, curX].asString).postln;
+
             // Look at the current cell
             # newPeriod, newIdx = outGrid[curY][curX];
 
+            // Do nothing on rests
             if (newPeriod != 0,
                 {
                     // Replace the old inner grid
@@ -297,8 +316,8 @@ var playSong = {
                 if (period != 0,
                     {
                         // Get the inner grid and go the appropriate number of steps
-                        // Assumes each inner cell does one step every time
-                        // the outer position moves
+                        // Each inner cell does one step every time the outer
+                        // position moves
                         inGrid = innerGrids[period][idx];
                         inGrid = stepInner.value(inGrid, step % period);
 
@@ -327,10 +346,7 @@ var playSong = {
                 }.defer;
             };
 
-            // Move the position
-            // This could (should?) be based on the current position in the grid
-            // Currently loops to the other side if an edge is reached
-            // Could also not move, retry randomly, jump to a random place, etc
+            // Move the position randomly, loops to the other side if an edge is reached
             curX = (curX + (-1 .. 1).choose) % outCols;
             curY = (curY + (-1 .. 1).choose) % outRows;
 
@@ -345,39 +361,6 @@ var playSong = {
 
     // Start the song
     play.play;
-};
-
-// A rule to generate the outer grid
-var innerChoiceRule = {|in|
-    var inPeriods, inIdxs;
-    var outPeriod, outIdx;
-
-    # inPeriods, inIdxs = in.flop;
-
-    outPeriod = [innerGrids.keys.asList, 0].flat.choose;
-
-    outIdx = if (outPeriod != 0,
-        { innerGrids[outPeriod].size.rand; },
-        { 0; }
-    );
-
-    [outPeriod, outIdx];
-};
-
-// Conway's Game of Life rules (used for the inner grids)
-var gameOfLife = {|in, curVal|
-    var out;
-
-    out = if (curVal == 0,
-        { // Dead
-            if (in.sum == 3, { 1; }, { 0; });
-        },
-        { // Live
-            if (in.sum == 2 || (in.sum == 3), { 1; }, { 0; });
-        }
-    );
-
-    out;
 };
 
 /*** Examples ***/
