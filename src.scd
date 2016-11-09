@@ -148,16 +148,27 @@ var getDelay = {|oldDelay|
 
 // Handles interpreting and playing the inner grid
 var playInner = {|grid|
+    var pattern;
+
+    pattern = List[];
     grid.do {|row, rIdx|
         row.do {|value, cIdx|
             if (value == 1,
-                { ([rIdx, cIdx].asString + "is on").postln; }
+                {
+                    ([rIdx, cIdx].asString + "is on").postln;
+
+                    // An example of modifying the sample based on the row/col
+                    // pattern.add(Pbind(\instrument, \buf, \bufnum, b, \rate, (rIdx / (cIdx + 1)) % 2 + 1));
+                }
             );
         };
     };
 
     // Just a placeholder
     Pbind(\ctranspose, grid.flat.sum);
+
+    // How to wrap multiple Pbind's into a single pattern to be played together
+    // Ppar(pattern);
 };
 
 var playSong = {
@@ -198,6 +209,7 @@ var playSong = {
         var rect;
 
         outRows.do {|row|
+            // Draw the current position in red, all else in black
             outCols.do {|col|
                 Pen.color = if ([curX, curY] == [col, row],
                     { Color.red; },
@@ -207,6 +219,7 @@ var playSong = {
                 rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
                 Pen.addRect(rect);
 
+                // Don't fill in rests
                 if (outGrid[row][col][0] == 0,
                     { Pen.perform(\stroke); },
                     { Pen.perform(\fill); }
@@ -215,6 +228,7 @@ var playSong = {
         };
     };
 
+    // One display for each currently playing inner grid
     inDisplays = Array.fill(maxPlaying, nil);
     maxPlaying.do {|i|
         inDisplays[i] = Window(
@@ -223,6 +237,9 @@ var playSong = {
             false
         ).front;
         inDisplays[i].view.background = Color.white;
+
+        // See below in the play routine for an explanation
+        inDisplays[i].addUniqueMethod(\inGrid, { Array.fill2D(inRows, inCols, 0) });
 
         inDisplays[i].drawFunc = {|display|
             var rect;
@@ -234,6 +251,7 @@ var playSong = {
                     rect = Rect(col * gridSize, row * gridSize, gridSize, gridSize);
                     Pen.addRect(rect);
 
+                    // Don't fill in 0 values
                     if (display.inGrid[row][col] == 0,
                         { Pen.perform(\stroke); },
                         { Pen.perform(\fill); }
@@ -261,8 +279,7 @@ var playSong = {
             // Look at the current cell
             # newPeriod, newIdx = outGrid[curY][curX];
 
-            if (newPeriod == 0,
-                { /* Do whatever should happen here */ },
+            if (newPeriod != 0,
                 {
                     // Replace the old inner grid
                     playing[playingIdx][0] = newPeriod;
@@ -436,7 +453,11 @@ playSong.value();
 // PitchShift works but makes the tone really weird
 // FreqShift is also an option
 // might be better to just change the playback speed
+
+// Load a file from the same directory as the .scd file into a buffer
 b = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "guitar.wav");
+
+// Create a synthdef to play the buffer at a given rate
 (
 SynthDef(\buf, {|out = 0, bufnum = 0, rate = 1|
     Out.ar(out,
@@ -447,5 +468,8 @@ SynthDef(\buf, {|out = 0, bufnum = 0, rate = 1|
             doneAction: 2
         )
     );
-}).play(s, [\out, 0, \bufnum, b, \rate, 1]);
+}).add;
 )
+
+// Play the buffer in a pattern
+Pbind(\instrument, \buf, \bufnum, b, \rate, 1, \dur, 0.125).play;
