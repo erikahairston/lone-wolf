@@ -382,56 +382,20 @@ var examples = {
 playSong.value();
 );
 
+// Buffer example
+// PitchShift works but makes the tone really weird
+// FreqShift is also an option
+// might be better to just change the playback speed
+b = Buffer.read(s, thisProcess.nowExecutingPath.dirname +/+ "guitar.wav");
 (
-var ex;
-c = 20;
-r = 20;
-s = 15;
-a = Array.fill2D(r, c, { [0, 1].choose });
-
-w = Window(bounds: Rect(0, 0, c * s, r * s), resizable: false).front;
-w.addUniqueMethod(\myarg, {"arg"});
-w.myarg;
-w.myvar = 4;
-w.slotPut(0, 1);
-w.slotAt(0);
-w.slotAt(1);
-w.view.background = Color.white;
-w.getSlots;
-w.instill(0, 1, 2);
-w.obtain(1);
-w.slotPut(\myvar, "hey");
-ex = 5;
-y = 7;
-
-w.drawFunc = {|a, b, c|
-    var rect;
-    [a, b, c].postln;
-    r.do {|row|
-        c.do {|col|
-            Pen.color = if ([ex, y] == [col, row],
-                {Color.red},
-                {Color.black}
-            );
-            rect = Rect(col * s, row * s, s, s);
-            Pen.addRect(rect);
-
-            if (a[row][col] == 0, { Pen.perform(\stroke) }, { Pen.perform(\fill) });
-        };
-    };
-};
-
-q = Routine {
-    loop {
-        ex = (ex + (-1 .. 1).choose) % c;
-        y = (y + (-1 .. 1).choose) % r;
-        [ex, y].postln;
-
-        {w.refresh(1)}.defer;
-        1.wait;
-    };
-};
-//p.fork(AppClock);
-q.play;
-//p.defer.play;
+SynthDef(\buf, {|out = 0, bufnum = 0, rate = 1|
+    Out.ar(out,
+        PlayBuf.ar(
+            2,
+            bufnum,
+            rate * BufRateScale.kr(bufnum),
+            doneAction: 2
+        )
+    );
+}).play(s, [\out, 0, \bufnum, b, \rate, 1]);
 )
