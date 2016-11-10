@@ -6,41 +6,50 @@
 var innerGrids = (
     1: [
         [ // Block
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,1,1,0,0,0,0,0],
-            [0,0,0,0,1,1,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0]
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,1,1,0,0,0,0],
+            [0,0,0,1,1,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0]
         ]
     ],
     2: [
         [ // Blinker
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,1,1,1,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0]
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,1,1,1,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0]
         ]
     ],
     3: [
         [ // Caterer
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,1,0,0,0,0,0,0],
-            [0,0,1,0,0,0,1,1,1,1,0],
-            [0,0,1,0,0,0,1,0,0,0,0],
-            [0,0,1,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,1,0,0,0,0,0],
-            [0,0,0,1,1,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0]
+            [0,0,0,1,0,0,0,0,0],
+            [0,1,0,0,0,1,1,1,1],
+            [0,1,0,0,0,1,0,0,0],
+            [0,1,0,0,0,0,0,0,0],
+            [0,0,0,0,1,0,0,0,0],
+            [0,0,1,1,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0]
+        ]
+    ],
+    5: [
+        [ // Octagon
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,1,0,0,1,0,0,0],
+            [0,1,0,1,1,0,1,0,0],
+            [0,0,1,0,0,1,0,0,0],
+            [0,0,1,0,0,1,0,0,0],
+            [0,1,0,1,1,0,1,0,0],
+            [0,0,1,0,0,1,0,0,0],
+            [0,0,0,0,0,0,0,0,0]
         ]
     ]
 );
@@ -119,14 +128,20 @@ var stepInner = {|oldGrid, nsteps = 1|
     tempGrid = grid.deepCopy;
 
     nsteps.do { // Apply the rules nsteps times
-        (1 .. grid.size - 2).do {|rowIdx| // For each row (ignoring the edges)...
-            (1 .. grid[rowIdx].size - 2).do {|colIdx| // For each column (ignoring the edges)...
+        (0 .. grid.size - 1).do {|rowIdx| // For each row
+            (0 .. grid[rowIdx].size - 1).do {|colIdx| // For each column
+                var prevRow, nextRow, neighbors;
+
+                // Assume edges are surrounded by 0
+                prevRow = grid[rowIdx - 1] ? (0 ! grid[rowIdx].size);
+                nextRow = grid[rowIdx + 1] ? (0 ! grid[rowIdx].size);
+
                 // Get the list of neighbors (all 8 surrounding cells)
-                var neighbors = [
-                    grid[rowIdx - 1][colIdx - 1 .. colIdx + 1],
-                    grid[rowIdx][colIdx - 1], grid[rowIdx][colIdx + 1],
-                    grid[rowIdx + 1][colIdx - 1 .. colIdx + 1]
-                ].flat;
+                neighbors = [
+                    prevRow[colIdx - 1] ? 0, prevRow[colIdx], prevRow[colIdx + 1] ? 0,
+                    grid[rowIdx][colIdx - 1] ? 0, grid[rowIdx][colIdx + 1] ? 0,
+                    nextRow[colIdx - 1] ? 0, nextRow[colIdx], nextRow[colIdx + 1] ? 0
+                ];
 
                 // Apply the rules to get the new value in the temp grid
                 tempGrid[rowIdx][colIdx] = gameOfLife.value(neighbors, grid[rowIdx][colIdx]);
@@ -206,8 +221,8 @@ var playSong = {
     });
     outGrid = makeOuter.value(outRows, outCols, outRules, outInit);
 
-    inRows = 9;
-    inCols = 11;
+    inRows = innerGrids.choose.choose.size;
+    inCols = innerGrids.choose.choose[0].size;
     maxPlaying = 3;
 
     // Initialize the coordinates
@@ -416,8 +431,8 @@ var examples = {
     "".postln;
 
     // Example of a few steps of an oscillating inner cell
-    ~period = rrand(1,3);
-    ~grid = innerGrids[~period];
+    ~period = 5; //rrand(1,3);
+    ~grid = innerGrids[~period][0];
     ("Initial with period" + ~period).postln;
     ~grid.do {|row| row.join.postln; };
 
@@ -454,13 +469,13 @@ SynthDef(\buf, {|out = 0, bufnum = 0, rate = 1|
 }).add;
 
 SynthDef(\buf2, {|out = 0, bufnum = 0, rate = 1|
-   var inA, chainA, inB, chainB, chain;
+    var inA, chainA, inB, chainB, chain;
 
     inA = PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum), doneAction: 2);
     inB = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), doneAction: 2);
 
     chainA = FFT(LocalBuf(2048), inA);
-        chainB = FFT(LocalBuf(2048), inB);
+    chainB = FFT(LocalBuf(2048), inB);
     chain = PV_Add(chainA, chainB);
 
     Out.ar(out, IFFT(chain) ! 2);
@@ -483,3 +498,13 @@ play({
 // Play the buffer in a pattern
 Pbind(\instrument, \buf, \bufnum, b, \rate, 2, \dur, Pseq([1])).play;
 Pbind(\instrument, \buf2, \bufnum, b, \rate, 2, \dur, Pseq([1])).play;
+
+x = [[1,2,3],[4,5,6]];
+r = x[-1];
+r = if(isNil(r), {[0,0,0]});
+x[0][1..3];
+2 ? 1;
+x[-1] ? 0 ! 3
+
+x = (1: [1,2], 2: [2,3]);
+x.choose;
