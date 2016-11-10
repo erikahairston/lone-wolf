@@ -449,10 +449,37 @@ SynthDef(\buf, {|out = 0, bufnum = 0, rate = 1|
             bufnum,
             rate * BufRateScale.kr(bufnum),
             doneAction: 2
-        )
+        ) ! 2
     );
 }).add;
+
+SynthDef(\buf2, {|out = 0, bufnum = 0, rate = 1|
+   var inA, chainA, inB, chainB, chain;
+
+    inA = PlayBuf.ar(2, bufnum, BufRateScale.kr(bufnum), doneAction: 2);
+    inB = PlayBuf.ar(2, bufnum, rate * BufRateScale.kr(bufnum), doneAction: 2);
+
+    chainA = FFT(LocalBuf(2048), inA);
+        chainB = FFT(LocalBuf(2048), inB);
+    chain = PV_Add(chainA, chainB);
+
+    Out.ar(out, IFFT(chain) ! 2);
+}).add;
+
+play({
+    PitchShift.ar(
+        PlayBuf.ar(2, b, BufRateScale.kr(b), doneAction: 2),
+        0.2,
+        1,
+        //Line.kr(0.1, 4, 1),
+        0,
+        0.019,
+        1,
+        0
+    )
+});
 )
 
 // Play the buffer in a pattern
-Pbind(\instrument, \buf, \bufnum, b, \rate, 1, \dur, 0.125).play;
+Pbind(\instrument, \buf, \bufnum, b, \rate, 2, \dur, Pseq([1])).play;
+Pbind(\instrument, \buf2, \bufnum, b, \rate, 2, \dur, Pseq([1])).play;
