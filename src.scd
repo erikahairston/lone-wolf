@@ -277,10 +277,10 @@ var playInner = {|grid|
 };
 
 // Create the grids and walk around it in a loop
-var playSong = {
+var playSong = {|duration = inf|
     var curX, curY;
     var outGrid, outRows, outCols, outRules, outInit;
-    var inRows, inCols, maxPlaying;
+    var inRows, inCols, maxPlaying, playing;
     var outDisplay, inDisplays, gridSize;
     var play;
 
@@ -370,7 +370,7 @@ var playSong = {
 
     // The main loop
     play = Routine({
-        var playingIdx, playing;
+        var playingIdx;
         var newPeriod, newIdx, delay;
 
         delay = 1/4;
@@ -449,6 +449,16 @@ var playSong = {
 
     // Start the song
     play.play;
+
+    // Stop the song after duration seconds
+    AppClock.sched(duration, {|time|
+        play.stop;
+        playing.do {|player|
+            player[2].stop;
+        };
+        Window.closeAll;
+        nil;
+    });
 };
 
 /*** Examples ***/
@@ -519,3 +529,8 @@ var examples = {
 //examples.value();
 playSong.value();
 );
+
+// Cleanup
+(
+Window.closeAll;
+)
