@@ -4,7 +4,7 @@
 // Run this once
 (
 // File names of samples
-var sampleNames = ["Helplessness Sample.wav", "Ooo Sample.wav", "Dmm Sample.wav", "Free Sample.wav"];
+var sampleNames = ["helplessness_sample.wav", "ooo_sample.wav", "dmm_sample.wav", "free_sample.wav"];
 
 // Array of sample buffers
 ~samples = Array.fill(sampleNames.size, {|idx|
@@ -244,8 +244,10 @@ var getDelay = {|oldDelay|
 var playInner = {|grid|
     var pattern, seed, tuning, pitch, pitchRatio, restChance;
 
+    // Try to push the more dissonant intervals into less common columns
+    seed = [5, 11, 4, 7, 0, 16, 12, 14, 1];
+
     pattern = List[];
-    seed = [0, 1, 4, 5, 7, 11, 12, 16];
     tuning = Tuning.et12;
     restChance = 0.8;
 
