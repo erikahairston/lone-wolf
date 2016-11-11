@@ -4,7 +4,7 @@
 // Run this once
 (
 // File names of samples
-var sampleNames = ["guitar.wav"];
+var sampleNames = ["Helplessness Sample.wav", "Ooo Sample.wav", "Dmm Sample.wav", "Free Sample.wav"];
 
 // Array of sample buffers
 ~samples = Array.fill(sampleNames.size, {|idx|
