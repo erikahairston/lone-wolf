@@ -21,7 +21,7 @@ SynthDef(\samplePlayer, {|out = 0, bufnum = 0, rate = 1, left = 0|
 
     Out.ar(out, [buf * left, buf * ((left + 1) % 2)]);
 }).add;
-)
+);
 
 // Play this section
 (
@@ -247,7 +247,7 @@ var playInner = {|grid|
     pattern = List[];
     seed = [0, 1, 4, 5, 7, 11, 12, 16];
     tuning = Tuning.et12;
-    restChance = 0.9;
+    restChance = 0.8;
 
     grid.do {|row, rIdx|
         row.do {|value, cIdx|
@@ -265,7 +265,8 @@ var playInner = {|grid|
                         \bufnum, ~samples.wrapAt(rIdx % 4),
                         \rate, pitchRatio,
                         \left, (rIdx < 4).asInt,
-                        \type, Pwrand([\note, \rest], [1 - restChance, restChance], inf)
+                        \type, Pwrand([\note, \rest], [1 - restChance, restChance], inf),
+                        \dur, 0.5
                     ));
                 }
             );
@@ -533,4 +534,4 @@ playSong.value();
 // Cleanup
 (
 Window.closeAll;
-)
+);
