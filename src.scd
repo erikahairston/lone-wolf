@@ -118,11 +118,11 @@ var innerGrids = (
     ]
 );
 
-//rule to choose which innerGrid
+// Rule to choose which innerGrid
 var innerGridRule = {|inGridsList, period|
-	var pickedGrid;
-	var indx;
-	indx = period * 2 % inGridsList.size;
+    var pickedGrid, idx;
+
+    idx = period * 2 % inGridsList.size;
 };
 
 // A rule to generate the outer grid
@@ -135,7 +135,7 @@ var innerChoiceRule = {|in|
     outPeriod = [innerGrids.keys.asList, 0].flat.choose;
 
     outIdx = if (outPeriod != 0,
-		{ innerGridRule.value(innerGrids[outPeriod], outPeriod); },
+        { innerGridRule.value(innerGrids[outPeriod], outPeriod); },
         { 0; }
     );
 
@@ -472,6 +472,7 @@ var playSong = {|duration = inf|
 };
 
 playSong.value();
+// playSong.value(2 * 60) // Uncomment if you want it to end
 );
 
 // Cleanup
