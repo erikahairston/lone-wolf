@@ -119,10 +119,19 @@ var innerGrids = (
 );
 
 //rule to choose which innerGrid
-var innerGridRule = {|inGridsList, period|
+var innerGridRule = {|inGridsList, inPeriods, period|
 	var pickedGrid;
 	var indx;
-	indx = period * 2 % inGridsList.size;
+	var i, x;
+
+	i = inPeriods.sum;
+	x = case
+	    { i == 0 }   { indx =  0}
+	    { i == 1 } { indx = period* 2 % inGridsList.size }
+	    { i == 2 } { indx = period* 3 % inGridsList.size }
+	    { i == 3} { indx = period * 4 % inGridsList.size };
+indx.value;
+
 };
 
 // A rule to generate the outer grid
@@ -135,7 +144,7 @@ var innerChoiceRule = {|in|
     outPeriod = [innerGrids.keys.asList, 0].flat.choose;
 
     outIdx = if (outPeriod != 0,
-		{ innerGridRule.value(innerGrids[outPeriod], outPeriod); },
+		{ innerGridRule.value(innerGrids[outPeriod], inPeriods, outPeriod); },
         { 0; }
     );
 
