@@ -118,6 +118,13 @@ var innerGrids = (
     ]
 );
 
+//rule to choose which innerGrid
+var innerGridRule = {|inGridsList, period|
+	var pickedGrid;
+	var indx;
+	indx = period * 2 % inGridsList.size;
+};
+
 // A rule to generate the outer grid
 var innerChoiceRule = {|in|
     var inPeriods, inIdxs;
@@ -128,7 +135,7 @@ var innerChoiceRule = {|in|
     outPeriod = [innerGrids.keys.asList, 0].flat.choose;
 
     outIdx = if (outPeriod != 0,
-        { innerGrids[outPeriod].size.rand; },
+		{ innerGridRule.value(innerGrids[outPeriod], outPeriod); },
         { 0; }
     );
 
